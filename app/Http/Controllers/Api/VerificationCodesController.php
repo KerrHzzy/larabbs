@@ -11,6 +11,8 @@ class VerificationCodesController extends Controller
 {
     public function store(VerificationCodeRequest $request, EasySms $easySms)
     {
+        $phone = $request->phone;
+
         if (!app()->environment('production')) {
             $code = '1234';
         } else {
