@@ -11,7 +11,17 @@ return [
 
         // 默认可用的发送网关
         'gateways' => [
-            'aliyun',
+            'errorlog' => [
+                'file' => '/tmp/easy-sms.log',
+            ],
+            'aliyun' => [
+                'access_key_id' => env('SMS_ALIYUN_ACCESS_KEY_ID'),
+                'access_key_secret' => env('SMS_ALIYUN_ACCESS_KEY_SECRET'),
+                'sign_name' => 'Larabbs',
+                'templates' => [
+                    'register' => env('SMS_ALIYUN_TEMPLATE_REGISTER'),
+                ]
+            ],
         ],
     ],
     // 可用的网关配置
