@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Models\User;
 use Illuminate\Support\Arr;
 use Illuminate\Http\Request;
+use Overtrue\Socialite\AccessToken;
 use Illuminate\Auth\AuthenticationException;
 use App\Http\Requests\Api\SocialAuthorizationRequest;
 
@@ -12,32 +13,29 @@ class AuthorizationsController extends Controller
 {
     public function socialStore($type, SocialAuthorizationRequest $request)
     {
-        $driver = \Socialite::create($type);
+        $driver = \Socialite::driver($type);
 
         try {
             if ($code = $request->code) {
-                $oauthUser = $driver->userFromCode($code);
+                $accessToken = $driver->getAccessToken($code);
             } else {
                 $tokenData['access_token'] = $request->access_token;
 
                 // 微信需要增加 openid
                 if ($type == 'wechat') {
-                    $driver->withOpenid($request->openid);
+                    $tokenData['openid'] = $request->openid;
                 }
-
-                $oauthUser = $driver->userFromToken($request->access_token);
+                $accessToken = new AccessToken($tokenData);
             }
-        } catch (\Exception $e) {
-           throw new AuthenticationException('参数错误，未获取用户信息');
-        }
 
-        if (!$oauthUser->getId()) {
+            $oauthUser = $driver->user($accessToken);
+        } catch (\Exception $e) {
            throw new AuthenticationException('参数错误，未获取用户信息');
         }
 
         switch ($type) {
             case 'wechat':
-                $unionid = $oauthUser->getRaw()['unionid'] ?? null;
+                $unionid = $oauthUser->getOriginal()['unionid'] ?? null;
 
                 if ($unionid) {
                     $user = User::where('weixin_unionid', $unionid)->first();
